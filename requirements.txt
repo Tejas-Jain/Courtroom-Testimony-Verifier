@@ -1,6 +1,5 @@
-streamlit==1.24.1
+streamlit
 langchain
-
 python-dotenv
 torch
 sentence-transformers
