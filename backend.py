@@ -34,7 +34,7 @@ texts = ["How do I get a replacement Medicare card?",
 # dataset_embeddings = getEmbeddings(texts)
 
 
-question = ["How can Medicare help me?", 
+questions = ["How can Medicare help me?", 
             "What are the benefits of Insurance", 
             "What is Medicare and who can get it?"]
 # query_embeddings = getEmbeddings(question)
@@ -43,12 +43,13 @@ from sentence_transformers.util import semantic_search
 def mis_matches(dataset, queryset, threshold=0.9):
     dataset_embeddings = getEmbeddings(dataset)
     query_embeddings = getEmbeddings(queryset)
-    ans = []
-    for index, embedding in enumerate(query_embeddings):
-        hits = semantic_search(embedding, dataset_embeddings, top_k=1)
-        if(hits[0][2]>threshold):
-            ans.append([index, hits[0][0]['corpus_id'], hits[0][0]['score']])
-            print([dataset[hits[i]['corpus_id']] for i in range(len(hits))])
-    print("Ans:", ans)
-    
-mis_matches(text, questions, 0.5)
+    hits = semantic_search(query_embeddings, dataset_embeddings, top_k=1)
+    ans = [
+        [index, hit[0]['corpus_id'], hit[0]['score']]
+        for index, hit in enumerate(hits) 
+        if hit[0]['score']>threshold
+    ]
+#   print(ans)
+    return ans
+
+mis_matches(texts, questions, 0.5)
