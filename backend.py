@@ -50,6 +50,7 @@ def mis_matches(dataset, queryset, threshold=0.9):
         if hit[0]['score']>threshold
     ]
 #   print(ans)
+# [[0, 8, 0.7565304040908813], [2, 7, 1.0000001192092896]]
     return ans
 
-mis_matches(texts, questions, 0.5)
+# mis_matches(texts, questions, 0.5)
