@@ -4,6 +4,10 @@ import pandas as pd
 from langchain.text_splitter import CharacterTextSplitter
 from backend import mis_matches
 
+accusedSample = "I want to provide the facts regarding the car accident. At the time of the incident, I was driving a red SUV, traveling in the westbound direction. The other vehicle involved was a blue sedan. I want to emphasize that I was following the traffic rules and driving within the speed limit. I did not engage in any reckless behavior that could have caused the collision. The collision was an unfortunate event, and I believe a thorough investigation will reveal the true cause."
+victimSample = "I want to present the factual details of the car accident. I was driving a blue sedan, traveling in the northbound direction. The other driver's vehicle was a red SUV. I had the right of way and was adhering to the traffic signals. The collision occurred when the red SUV, driven by the accused, collided with the side of my vehicle. I want to stress that I was driving cautiously and responsibly at the time of the accident."
+policeSample = "According to the available evidence, the car accident involved a collision between a red SUV and a blue sedan at the intersection. The red SUV, driven by the accused, was traveling westbound, while the blue sedan was heading northbound. The impact of the collision resulted in visible damage to both vehicles. We will conduct a thorough investigation to determine the exact cause of the accident, taking into account all the hard facts and supporting evidence."
+
 if "processed" not in st.session_state:
     st.session_state.processed = False
 
@@ -23,22 +27,23 @@ def sidebar():
         "# Testimonies"
         def TestimoniesInput(party, placeholderTestimony):
             f"### {party} ###"
-            text = st.text_area(f"Enter the testimony of the case from {party}'s side", value=placeholderTestimony)
+            text = st.text_area(f"Enter {party}'s testimony:", value=placeholderTestimony)
+            
             return text
         
         def split_text(text):
             return [sentence for sentence in text.split(".") if sentence.strip()]
         
-        st.session_state.victimChunks = split_text(TestimoniesInput("Victim", "Enter the testimony of the case from Victim's side."))
-        st.session_state.accusedChunks = split_text(TestimoniesInput("Accused", "Enter the testimony of the case from Accused's side."))
-        st.session_state.policeChunks = split_text(TestimoniesInput("Police", "Enter the testimony of the case from Police's side."))
-
+        st.session_state.victimChunks = split_text(TestimoniesInput("Victim 🤕", victimSample))
+        st.session_state.accusedChunks = split_text(TestimoniesInput("Accused 😡", accusedSample))
+        st.session_state.policeChunks = split_text(TestimoniesInput("Police 👮", policeSample))
+        st.session_state.tolerance = st.number_input("Enter the tolerance in contradictions:", value=70, min_value=0, max_value=100, step=1)
 
         def clickProcess():
-            with st.spinner("Un-believably Complex Computation Going On!!! Please Wait..."):
+            with st.spinner("Un-believably Complex Computation Going On! Hold On Tight..."):
                 st.session_state.process_clicked = True
-                st.session_state.accused_doubts = mis_matches(st.session_state.policeChunks, st.session_state.accusedChunks, 0)
-                st.session_state.victim_doubts = mis_matches(st.session_state.policeChunks, st.session_state.victimChunks, 0)
+                st.session_state.accused_doubts = mis_matches(st.session_state.policeChunks, st.session_state.accusedChunks, st.session_state.tolerance/100)
+                st.session_state.victim_doubts = mis_matches(st.session_state.policeChunks, st.session_state.victimChunks, st.session_state.tolerance/100)
                 st.balloons()
                 
         
@@ -55,28 +60,40 @@ def mainpage():
     st.subheader("Give Courtroom Testimonies and Find AI based truthfulness score with inconsistencies")
 
     def get_mismatch_string(party_name, party_chunks, evid_chunks, doubts):
-        print(doubts)
         return ("").join([
-            f"<b>{party_name}:</b> {party_chunks[doubt[0]]} <br> <b>Evidence:</b> <i>{evid_chunks[doubt[1]]}</i> <br><br>" 
+            f"<b>{party_name}:</b> {party_chunks[doubt[0]]} <br> <b>👮:</b> <i>{evid_chunks[doubt[1]]}</i> <br><br>" 
             for doubt in doubts
         ])
-    
+    def calculate_truth(doubts):
+        sum = 0.0
+        for doubt in doubts:
+            sum += doubt[2]
+        ans = round(sum/len(doubts)*100, 2)
+        if ans==0:
+            return
+        return ans
+
     if st.session_state.process_clicked:
         df = pd.DataFrame(
             {
-                "Party": ["Accused", "Victim"],
-                "DoubtFulStatements": [
-                    get_mismatch_string("Accused", st.session_state.victimChunks, st.session_state.policeChunks, st.session_state.victim_doubts),
-                    get_mismatch_string("Victim", st.session_state.accusedChunks, st.session_state.policeChunks, st.session_state.accused_doubts)
+                "<th><strong>Parties</strong></th>": ["<b>Accused</b>", "<b>Victim</b>"],
+                "<th><b>DoubtFulStatements</b></th>": [
+                    get_mismatch_string("😡", st.session_state.victimChunks, st.session_state.policeChunks, st.session_state.victim_doubts),
+                    get_mismatch_string("🤕", st.session_state.accusedChunks, st.session_state.policeChunks, st.session_state.accused_doubts)
                 ],
-                "stars": [random.randint(0, 1000) for _ in range(2)]
+                "<th><b>Truthfulness %<br> (Based on AI Semantic Analysis)</th>": [
+                    calculate_truth(st.session_state.victim_doubts), 
+                    calculate_truth(st.session_state.accused_doubts)
+                ]
             }
         )
         html_table = df.to_html(classes='table', escape=False, index=False)
         styled_html_table = html_table.replace('<table', '<table style="text-align: left"')
         st.write(styled_html_table, unsafe_allow_html=True)
     else:
-        st.header("Enter the Testimonies on Left side panel")
+        "## 👈Enter the Testimonies"
+        "## OR ##"
+        "## Try A Sample Case... ##"
 
 def main():
     st.set_page_config(page_title="Courtroom Testimonies Verifier",page_icon=":scales:")
