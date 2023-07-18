@@ -14,30 +14,33 @@ headers = {"Authorization": f"Bearer {hf_token}"}
 def getEmbeddings(texts):
     response = requests.post(api_url, headers=headers, json={"inputs": texts, "options":{"wait_for_model":True}})
     embeddedData = response.json()
-    return torch.FloatTensor(embeddedData)
+    embeddings = pd.DataFrame(embeddedData)
+    dataset_embeddings = torch.from_numpy(embeddings.to_numpy()).to(torch.float)
+    return dataset_embeddings
 
 
 # #  Preparing Embeddings from the text and converting it to CSV for UI uploading
-texts = ["How do I get a replacement Medicare card?",
-        "What is the monthly premium for Medicare Part B?",
-        "How do I terminate my Medicare Part B (medical insurance)?",
-        "How do I sign up for Medicare?",
-        "Can I sign up for Medicare Part B if I am working and have health insurance through an employer?",
-        "How do I sign up for Medicare Part B if I already have Part A?",
-        "What are Medicare late enrollment penalties?",
-        "What is Medicare and who can get it?",
-        "How can I get help with my Medicare Part A and Part B premiums?",
-        "What are the different parts of Medicare?",
-        "Will my Medicare premiums be higher because of my higher income?",
-        "What is TRICARE ?",
-        "Should I sign up for Medicare Part B if I have Veterans' Benefits?"]
-# dataset_embeddings = getEmbeddings(texts)
+# # Sample Data
+# texts = ["How do I get a replacement Medicare card?",
+#         "What is the monthly premium for Medicare Part B?",
+#         "How do I terminate my Medicare Part B (medical insurance)?",
+#         "How do I sign up for Medicare?",
+#         "Can I sign up for Medicare Part B if I am working and have health insurance through an employer?",
+#         "How do I sign up for Medicare Part B if I already have Part A?",
+#         "What are Medicare late enrollment penalties?",
+#         "What is Medicare and who can get it?",
+#         "How can I get help with my Medicare Part A and Part B premiums?",
+#         "What are the different parts of Medicare?",
+#         "Will my Medicare premiums be higher because of my higher income?",
+#         "What is TRICARE ?",
+#         "Should I sign up for Medicare Part B if I have Veterans' Benefits?"]
+# # dataset_embeddings = getEmbeddings(texts)
 
 
-questions = ["How can Medicare help me?", 
-            "What are the benefits of Insurance", 
-            "What is Medicare and who can get it?"]
-# query_embeddings = getEmbeddings(question)
+# questions = ["How can Medicare help me?", 
+#             "What are the benefits of Insurance", 
+#             "What is Medicare and who can get it?"]
+# # query_embeddings = getEmbeddings(question)
 
 from sentence_transformers.util import semantic_search
 def mis_matches(dataset, queryset, threshold=0.9):
@@ -50,7 +53,7 @@ def mis_matches(dataset, queryset, threshold=0.9):
         if hit[0]['score']>threshold
     ]
 #   print(ans)
-# [[0, 8, 0.7565304040908813], [2, 7, 1.0000001192092896]]
     return ans
 
 # mis_matches(texts, questions, 0.5)
+# Sample Output [[0, 8, 0.7565304040908813], [2, 7, 1.0000001192092896]]

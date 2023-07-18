@@ -28,7 +28,6 @@ def sidebar():
         def TestimoniesInput(party, placeholderTestimony):
             f"### {party} ###"
             text = st.text_area(f"Enter {party}'s testimony:", value=placeholderTestimony)
-            
             return text
         
         def split_text(text):
@@ -76,12 +75,12 @@ def mainpage():
     if st.session_state.process_clicked:
         df = pd.DataFrame(
             {
-                "<th><strong>Parties</strong></th>": ["<b>Accused</b>", "<b>Victim</b>"],
-                "<th><b>DoubtFulStatements</b></th>": [
+                "<strong>Parties</strong>": ["<b>Accused</b>", "<b>Victim</b>"],
+                "<b>DoubtFulStatements</b>": [
                     get_mismatch_string("😡", st.session_state.victimChunks, st.session_state.policeChunks, st.session_state.victim_doubts),
                     get_mismatch_string("🤕", st.session_state.accusedChunks, st.session_state.policeChunks, st.session_state.accused_doubts)
                 ],
-                "<th><b>Truthfulness %<br> (Based on AI Semantic Analysis)</th>": [
+                "<b>Truthfulness %<br> (Based on AI Semantic Analysis)": [
                     calculate_truth(st.session_state.victim_doubts), 
                     calculate_truth(st.session_state.accused_doubts)
                 ]
