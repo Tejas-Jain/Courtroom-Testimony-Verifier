@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import pandas as pd
 import torch
+import numpy as np
 load_dotenv()
 
 model_id = os.getenv("model_id")
@@ -12,10 +13,11 @@ headers = {"Authorization": f"Bearer {hf_token}"}
 
 
 def getEmbeddings(texts):
-    response = requests.post(api_url, headers=headers, json={"inputs": texts, "options":{"wait_for_model":True}})
+    response = requests.post(api_url, headers=headers, json={"inputs": texts, "options": {"wait_for_model": True}})
     embeddedData = response.json()
-    embeddings = pd.DataFrame(embeddedData)
-    dataset_embeddings = torch.from_numpy(embeddings.to_numpy()).to(torch.float)
+    embeddings_array = np.array(embeddedData)
+    embeddings = pd.DataFrame(embeddings_array)
+    dataset_embeddings = torch.tensor(embeddings.values, dtype=torch.float)
     return dataset_embeddings
 
 
