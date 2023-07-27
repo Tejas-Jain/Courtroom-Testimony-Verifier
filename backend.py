@@ -12,12 +12,16 @@ api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{mo
 headers = {"Authorization": f"Bearer {hf_token}"}
 
 
-def getEmbeddings(texts):
+def getEmbeddings(texts):    
     response = requests.post(api_url, headers=headers, json={"inputs": texts, "options": {"wait_for_model": True}})
+
+    # Added Error in Response check
+    if not response.status_code==200:
+        print(response.json()['error'])
+        return "failed"
+    
     embeddedData = response.json()
-    embeddings_array = np.array(embeddedData)
-    embeddings = pd.DataFrame(embeddings_array)
-    dataset_embeddings = torch.tensor(embeddings.values, dtype=torch.float)
+    dataset_embeddings = torch.FloatTensor(embeddedData)
     return dataset_embeddings
 
 
@@ -48,6 +52,11 @@ from sentence_transformers.util import semantic_search
 def mis_matches(dataset, queryset, threshold=0.9):
     dataset_embeddings = getEmbeddings(dataset)
     query_embeddings = getEmbeddings(queryset)
+
+    # Error Statement in case of API Call Failure
+    if dataset_embeddings=="failed" or query_embeddings=='failed':
+        print("Request Failed")
+        return
     hits = semantic_search(query_embeddings, dataset_embeddings, top_k=1)
     ans = [
         [index, hit[0]['corpus_id'], hit[0]['score']]
