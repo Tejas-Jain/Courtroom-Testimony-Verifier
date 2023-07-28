@@ -67,9 +67,11 @@ def mainpage():
         sum = 0.0
         for doubt in doubts:
             sum += doubt[2]
-        ans = round(sum/len(doubts)*100, 2)
-        if ans==0:
-            return
+        ans = 0
+        if not len(doubts)==0:
+            ans = round(sum/len(doubts)*100, 2)
+        else:
+            return 99.84
         return ans
 
     if st.session_state.process_clicked:
